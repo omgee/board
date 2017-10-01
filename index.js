@@ -52,8 +52,8 @@ var Stickers = (function () {
 }());
 var Sticker = (function () {
     function Sticker(x, y, id, text) {
-        this.x = x > 100 ? x : 0;
-        this.y = y > 100 ? y : 0;
+        this.x = x > 0 ? x : 0;
+        this.y = y > 0 ? y : 0;
         this.id = id ? id : Stickers.array.length;
         this.text = text ? text : "";
         Stickers.array.push(this);
