@@ -69,3 +69,12 @@ textarea {
   flex: 1;
   padding: .5em;
 }
+
+@keyframes sticker-show {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}

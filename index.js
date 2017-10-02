@@ -2,52 +2,43 @@ var board = document.querySelector(".board");
 var Stickers = (function () {
     function Stickers() {
     }
-    Stickers.remove = function (id) {
-        Stickers.array.splice(id, 1);
-        for (var i = 0; i < Stickers.array.length; i++) {
-            Stickers.array[i].id = i;
-        }
-        Stickers.drawAll();
+    Stickers.create = function (x, y, id, text) {
+        Stickers.array.push(new Sticker(x, y, id, text));
         Stickers.save();
     };
-    Stickers.drawAll = function () {
-        board.innerHTML = "";
+    Stickers.get = function (id) {
         for (var _i = 0, _a = Stickers.array; _i < _a.length; _i++) {
             var sticker = _a[_i];
-            sticker.draw();
+            if (sticker.id === id)
+                return sticker;
         }
     };
-    Stickers.convertAll = function () {
-        Stickers.convertedArray = [];
-        for (var _i = 0, _a = Stickers.array; _i < _a.length; _i++) {
-            var sticker = _a[_i];
-            Stickers.convertedArray.push(sticker.convert());
-        }
-    };
-    Stickers.reConvertAll = function () {
-        Stickers.array = [];
-        for (var _i = 0, _a = Stickers.convertedArray; _i < _a.length; _i++) {
-            var sticker = _a[_i];
-            new Sticker(sticker.x, sticker.y, sticker.id, sticker.text);
-        }
-        Stickers.drawAll();
-    };
-    Stickers.move = function (id, x, y) {
-        Stickers.array[id].move(x, y);
+    Stickers.remove = function (id) {
+        Stickers.get(id).remove();
+        Stickers.array.splice(Stickers.array.indexOf(Stickers.get(id)), 1);
+        Stickers.save();
     };
     Stickers.save = function () {
-        Stickers.convertAll();
-        localStorage.setItem("stickers", JSON.stringify(Stickers.convertedArray));
+        var tmpArray = [];
+        for (var _i = 0, _a = Stickers.array; _i < _a.length; _i++) {
+            var sticker = _a[_i];
+            tmpArray.push({
+                x: sticker.x,
+                y: sticker.y,
+                id: sticker.id,
+                text: sticker.text
+            });
+        }
+        localStorage.setItem("stickers", JSON.stringify(tmpArray));
     };
     Stickers.load = function () {
-        Stickers.reConvertAll();
-    };
-    Stickers.changeText = function (id) {
-        Stickers.array[id].text = document.querySelector("[data-id=\"" + id + "\"]").parentElement.querySelector("textarea").value;
-        Stickers.save();
+        var tmpArray = JSON.parse(localStorage.getItem("stickers"));
+        for (var _i = 0, tmpArray_1 = tmpArray; _i < tmpArray_1.length; _i++) {
+            var sticker = tmpArray_1[_i];
+            Stickers.create(sticker.x, sticker.y, sticker.id, sticker.text);
+        }
     };
     Stickers.array = [];
-    Stickers.convertedArray = JSON.parse(localStorage.getItem("stickers")) || [];
     return Stickers;
 }());
 var Sticker = (function () {
@@ -56,81 +47,104 @@ var Sticker = (function () {
         this.y = y > 0 ? y : 0;
         this.id = id ? id : Stickers.array.length;
         this.text = text ? text : "";
-        Stickers.array.push(this);
-        this.draw();
-        this.element = document.querySelector("[data-id=\"" + this.id + "\"]").parentElement;
+        this.create();
     }
-    Sticker.prototype.draw = function () {
-        board.innerHTML += "<div class=\"sticker\" style=\"left: " + this.x + "px; top: " + this.y + "px;\"><div data-id=\"" + this.id + "\" class=\"sticker-head\"></div><div class=\"sticker-body\"><textarea onkeydown=\"Stickers.changeText(" + this.id + ")\">" + this.text + "</textarea></div></div>";
+    Sticker.prototype.create = function () {
+        var sticker = document.createElement("div");
+        var sticker_head = document.createElement("div");
+        var sticker_body = document.createElement("div");
+        var sticker_body_textarea = document.createElement("textarea");
+        sticker.draggable = true;
+        sticker.className = "sticker";
+        sticker_head.className = "sticker-head";
+        sticker_body.className = "sticker-body";
+        sticker.style.top = this.y + "px";
+        sticker.style.left = this.x + "px";
+        sticker_body_textarea.value = this.text;
+        console.log(Stickers.array);
+        sticker_head.dataset.id = "" + this.id;
+        sticker_body.appendChild(sticker_body_textarea);
+        sticker.appendChild(sticker_head);
+        sticker.appendChild(sticker_body);
+        this.element = sticker;
+        board.appendChild(sticker);
+        new MouseListener(this);
+        new KeyboardListener(this, sticker_body_textarea);
+    };
+    Sticker.prototype.remove = function () {
+        this.element.remove();
     };
     Sticker.prototype.move = function (x, y) {
-        this.element = document.querySelector("[data-id=\"" + this.id + "\"]").parentElement;
         this.x = x;
         this.y = y;
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
-    };
-    Sticker.prototype.convert = function () {
-        return {
-            x: this.x,
-            y: this.y,
-            id: this.id,
-            text: this.text
-        };
+        Stickers.save();
     };
     return Sticker;
 }());
-var Mouse = (function () {
-    function Mouse() {
+var KeyboardListener = (function () {
+    function KeyboardListener(sticker, textarea) {
         var _this = this;
-        this.isDown = false;
-        this.id = null;
-        board.addEventListener("contextmenu", function (e) {
-            e.preventDefault();
-            _this.onContextMenu(e);
-            return false;
-        }, false);
-        board.addEventListener("mousedown", function (e) {
-            _this.onDown(e);
-        }, false);
-        board.addEventListener("mousemove", function (e) {
-            e.preventDefault();
-            _this.onMove(e);
-            return false;
-        }, false);
-        board.addEventListener("mouseup", function (e) {
-            e.preventDefault();
-            _this.onUp(e);
-            return false;
+        this.sticker = sticker;
+        this.element = sticker.element;
+        this.textarea = textarea;
+        this.textarea.addEventListener("keyup", function () {
+            _this.keyUp();
         }, false);
     }
-    Mouse.prototype.onContextMenu = function (e) {
-        if (e.target.className === "board") {
-            new Sticker(e.clientX - 100, e.clientY - 100);
-        }
-        else if (e.target.className === "sticker-head") {
-            Stickers.remove(e.target.dataset.id);
-        }
-    };
-    Mouse.prototype.onDown = function (e) {
-        if (e.target.className === "sticker-head") {
-            this.oldX = e.offsetX;
-            this.oldY = e.offsetY;
-            this.isDown = true;
-            this.id = e.target.dataset.id;
-        }
-    };
-    Mouse.prototype.onMove = function (e) {
-        if (this.isDown && this.id) {
-            Stickers.move(this.id, e.clientX - this.oldX, e.clientY - this.oldY);
-        }
-    };
-    Mouse.prototype.onUp = function (e) {
-        this.isDown = false;
-        this.id = null;
+    KeyboardListener.prototype.keyUp = function () {
+        console.log(this.sticker);
+        this.sticker.text = this.textarea.value;
         Stickers.save();
     };
-    return Mouse;
+    return KeyboardListener;
 }());
-new Mouse();
+var MouseListener = (function () {
+    function MouseListener(sticker) {
+        var _this = this;
+        this.sticker = sticker;
+        this.element = sticker.element;
+        this.element.addEventListener("dragstart", function (e) {
+            _this.dragStart(e);
+        }, false);
+        this.element.addEventListener("drag", function (e) {
+            _this.drag(e);
+        }, false);
+        this.element.addEventListener("dragend", function (e) {
+            _this.dragEnd(e);
+        }, false);
+        this.element.addEventListener("dragleave", function (e) {
+            _this.dragLeave(e);
+        }, false);
+    }
+    MouseListener.prototype.dragStart = function (e) {
+        this.x = e.offsetX;
+        this.y = e.offsetY;
+        var crt = this.element.cloneNode(true);
+        e.dataTransfer.setDragImage(crt, 0, 0);
+    };
+    MouseListener.prototype.drag = function (e) {
+        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+    };
+    MouseListener.prototype.dragEnd = function (e) {
+        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+    };
+    MouseListener.prototype.dragLeave = function (e) {
+        console.log("test");
+        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+    };
+    MouseListener.context = function (e) {
+        e.preventDefault();
+        var target = e.target;
+        if (target.className === "board") {
+            Stickers.create(e.clientX - 100, e.clientY - 100);
+        }
+        else if (target.className === "sticker-head") {
+            Stickers.remove(parseInt(target.dataset.id));
+        }
+    };
+    return MouseListener;
+}());
+board.addEventListener("contextmenu", MouseListener.context, false);
 Stickers.load();

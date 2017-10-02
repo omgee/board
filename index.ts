@@ -1,63 +1,45 @@
 const board = document.querySelector(`.board`);
 
-interface ConvertedSticker {
-    x: number;
-    y: number;
-    id: number;
-    text: string;
-}
-
 class Stickers {
     static array: Array<Sticker> = [];
-    static convertedArray: Array<ConvertedSticker> = JSON.parse(localStorage.getItem(`stickers`)) || [];
 
-    static remove(id: number): void {
-        Stickers.array.splice(id, 1);
-        for (let i = 0; i < Stickers.array.length; i++) {
-            Stickers.array[i].id = i;
-        }
-        Stickers.drawAll();
+    static create(x: number, y: number, id?: number, text?: string): void {
+        Stickers.array.push(new Sticker(x, y, id, text));
+
         Stickers.save();
     }
 
-    static drawAll(): void {
-        board.innerHTML = ``;
+    static get(id: number): Sticker {
         for (let sticker of Stickers.array) {
-            sticker.draw();
+            if (sticker.id === id) return sticker;
         }
     }
 
-    static convertAll(): void {
-        Stickers.convertedArray = [];
-        for (let sticker of Stickers.array) {
-            Stickers.convertedArray.push(sticker.convert());
-        }
-    }
+    static remove(id: number): void {
+        Stickers.get(id).remove();
+        Stickers.array.splice(Stickers.array.indexOf(Stickers.get(id)), 1);
 
-    static reConvertAll(): void {
-        Stickers.array = [];
-        for (let sticker of Stickers.convertedArray) {
-            new Sticker(sticker.x, sticker.y, sticker.id, sticker.text);
-        }
-        Stickers.drawAll();
-    }
-
-    static move(id: number, x: number, y: number) {
-        Stickers.array[id].move(x, y);
+        Stickers.save();
     }
 
     static save() {
-        Stickers.convertAll();
-        localStorage.setItem(`stickers`, JSON.stringify(Stickers.convertedArray));
+        let tmpArray = [];
+        for (let sticker of Stickers.array) {
+            tmpArray.push({
+                x: sticker.x,
+                y: sticker.y,
+                id: sticker.id,
+                text: sticker.text
+            });
+        }
+        localStorage.setItem(`stickers`, JSON.stringify(tmpArray));
     }
 
     static load() {
-        Stickers.reConvertAll();
-    }
-
-    static changeText(id: number) {
-        Stickers.array[id].text = document.querySelector(`[data-id="${id}"]`).parentElement.querySelector(`textarea`).value;
-        Stickers.save();
+        let tmpArray = JSON.parse(localStorage.getItem(`stickers`));
+        for (let sticker of tmpArray) {
+            Stickers.create(sticker.x, sticker.y, sticker.id, sticker.text);
+        }
     }
 }
 
@@ -74,94 +56,146 @@ class Sticker {
         this.id = id ? id : Stickers.array.length;
         this.text = text ? text : ``;
 
-        Stickers.array.push(this);
+        this.create();
 
-        this.draw();
-        this.element = <HTMLElement> document.querySelector(`[data-id="${this.id}"]`).parentElement;
     }
 
-    draw() {
-        board.innerHTML += `<div class="sticker" style="left: ${this.x}px; top: ${this.y}px;"><div data-id="${this.id}" class="sticker-head"></div><div class="sticker-body"><textarea onkeydown="Stickers.changeText(${this.id})">${this.text}</textarea></div></div>`;
+    create() {
+        const sticker: HTMLElement = document.createElement(`div`);
+        const sticker_head: HTMLElement = document.createElement(`div`);
+        const sticker_body: HTMLElement = document.createElement(`div`);
+        const sticker_body_textarea: HTMLTextAreaElement = <HTMLTextAreaElement> document.createElement(`textarea`);
+
+        sticker.draggable = true;
+
+        sticker.className = `sticker`;
+        sticker_head.className = `sticker-head`;
+        sticker_body.className = `sticker-body`;
+
+        sticker.style.top = `${this.y}px`;
+        sticker.style.left = `${this.x}px`;
+
+        sticker_body_textarea.value = this.text;
+        console.log(Stickers.array);
+
+        sticker_head.dataset.id = `${this.id}`;
+
+        sticker_body.appendChild(sticker_body_textarea);
+        sticker.appendChild(sticker_head);
+        sticker.appendChild(sticker_body);
+
+        this.element = sticker;
+
+        board.appendChild(sticker);
+
+        new MouseListener(this);
+        new KeyboardListener(this, sticker_body_textarea);
+    }
+
+    remove(): void {
+        this.element.remove();
     }
 
     move(x: number, y: number): void {
-        this.element = <HTMLElement> document.querySelector(`[data-id="${this.id}"]`).parentElement;
         this.x = x;
         this.y = y;
         this.element.style.left = `${x}px`;
         this.element.style.top = `${y}px`;
-    }
 
-    convert() {
-        return {
-            x: this.x,
-            y: this.y,
-            id: this.id,
-            text: this.text
-        }
+        Stickers.save()
     }
 }
 
-class Mouse {
-    isDown: boolean = false;
-    id: number = null;
-    oldX: number;
-    oldY: number;
+class KeyboardListener {
+    sticker: Sticker;
+    element: HTMLElement;
+    textarea: HTMLTextAreaElement;
 
-    constructor() {
-        board.addEventListener(`contextmenu`, (e: PointerEvent) => {
-            e.preventDefault();
-            this.onContextMenu(e);
-            return false;
-        }, false);
+    constructor(sticker: Sticker, textarea: HTMLElement) {
+        this.sticker = sticker;
+        this.element = sticker.element;
+        this.textarea = <HTMLTextAreaElement> textarea;
 
-        board.addEventListener(`mousedown`, (e: PointerEvent) => {
-            this.onDown(e);
-        }, false);
-
-        board.addEventListener(`mousemove`, (e: PointerEvent) => {
-            e.preventDefault();
-            this.onMove(e);
-            return false;
-        }, false);
-
-        board.addEventListener(`mouseup`, (e: PointerEvent) => {
-            e.preventDefault();
-            this.onUp(e);
-            return false;
+        this.textarea.addEventListener(`keyup`, () => {
+            this.keyUp();
         }, false);
     }
 
-    onContextMenu(e: PointerEvent) {
-        if (e.target.className === `board`) {
-            new Sticker(e.clientX - 100, e.clientY - 100);
-        }
-        else if (e.target.className === `sticker-head`) {
-            Stickers.remove(e.target.dataset.id);
-        }
-    }
+    keyUp(): void {
+        console.log(this.sticker);
+        this.sticker.text = this.textarea.value;
 
-    onDown(e: PointerEvent): void {
-        if (e.target.className === `sticker-head`) {
-            this.oldX = e.offsetX;
-            this.oldY = e.offsetY;
-            this.isDown = true;
-            this.id = e.target.dataset.id;
-        }
-    }
-
-    onMove(e: PointerEvent): void {
-        if (this.isDown && this.id) {
-            Stickers.move(this.id, e.clientX - this.oldX, e.clientY - this.oldY);
-        }
-    }
-
-    onUp(e: PointerEvent): void {
-        this.isDown = false;
-        this.id = null;
         Stickers.save();
     }
 }
 
-new Mouse();
+class MouseListener {
+    x: number;
+    y: number;
+    sticker: Sticker;
+    element: HTMLElement;
+
+    constructor(sticker: Sticker) {
+        this.sticker = sticker;
+        this.element = sticker.element;
+
+        this.element.addEventListener(`dragstart`, (e: DragEvent) => {
+
+            this.dragStart(e);
+
+        }, false);
+
+        this.element.addEventListener(`drag`, (e: DragEvent) => {
+
+            this.drag(e);
+
+        }, false);
+
+        this.element.addEventListener(`dragend`, (e: DragEvent) => {
+
+            this.dragEnd(e);
+
+        }, false);
+
+        this.element.addEventListener(`dragleave`, (e: DragEvent) => {
+
+            this.dragLeave(e);
+
+        }, false);
+    }
+
+    dragStart(e: DragEvent) {
+        this.x = e.offsetX;
+        this.y = e.offsetY;
+        const crt = <Element> this.element.cloneNode(true);
+        e.dataTransfer.setDragImage(crt, 0, 0);
+    }
+
+    drag(e: DragEvent) {
+        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+    }
+
+    dragEnd(e: DragEvent) {
+        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+    }
+
+    dragLeave(e: DragEvent) {
+        console.log(`test`);
+        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+    }
+
+    static context(e: PointerEvent) {
+        e.preventDefault();
+        const target: HTMLElement = <HTMLElement> e.target;
+        if (target.className === `board`) {
+            Stickers.create(e.clientX - 100, e.clientY - 100);
+        }
+        else if (target.className === `sticker-head`) {
+            Stickers.remove(parseInt(target.dataset.id));
+        }
+    }
+}
+
+board.addEventListener(`contextmenu`, MouseListener.context, false);
+
 Stickers.load();
