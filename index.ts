@@ -15,6 +15,14 @@ class Stickers {
         }
     }
 
+    static last(): number {
+        let tmp: number = 0;
+        for (let sticker of Stickers.array) {
+            if (sticker.id > tmp) tmp = sticker.id;
+        }
+        return tmp;
+    }
+
     static remove(id: number): void {
         Stickers.get(id).remove();
         Stickers.array.splice(Stickers.array.indexOf(Stickers.get(id)), 1);
@@ -53,7 +61,7 @@ class Sticker {
     constructor(x: number, y: number, id?:number, text?: string) {
         this.x = x > 0 ? x : 0;
         this.y = y > 0 ? y : 0;
-        this.id = id ? id : Stickers.array.length;
+        this.id = id ? id : Stickers.last() + 1;
         this.text = text ? text : ``;
 
         this.create();
@@ -72,13 +80,15 @@ class Sticker {
         sticker_head.className = `sticker-head`;
         sticker_body.className = `sticker-body`;
 
-        sticker.style.top = `${this.y}px`;
         sticker.style.left = `${this.x}px`;
+        sticker.style.top = `${this.y}px`;
 
         sticker_body_textarea.value = this.text;
-        console.log(Stickers.array);
 
+        sticker.dataset.id = `${this.id}`;
         sticker_head.dataset.id = `${this.id}`;
+        sticker_body.dataset.id = `${this.id}`;
+        sticker_body_textarea.dataset.id = `${this.id}`;
 
         sticker_body.appendChild(sticker_body_textarea);
         sticker.appendChild(sticker_head);
@@ -88,17 +98,23 @@ class Sticker {
 
         board.appendChild(sticker);
 
+        sticker.style.animation = `show .3s cubic-bezier(.25, .8, .25, 1)`;
+
         new MouseListener(this);
         new KeyboardListener(this, sticker_body_textarea);
     }
 
     remove(): void {
-        this.element.remove();
+        this.element.style.transform = `scale(0)`;
+        setTimeout(() => {
+            this.element.remove();
+        }, 300);
     }
 
     move(x: number, y: number): void {
         this.x = x;
         this.y = y;
+
         this.element.style.left = `${x}px`;
         this.element.style.top = `${y}px`;
 
@@ -156,12 +172,6 @@ class MouseListener {
             this.dragEnd(e);
 
         }, false);
-
-        this.element.addEventListener(`dragleave`, (e: DragEvent) => {
-
-            this.dragLeave(e);
-
-        }, false);
     }
 
     dragStart(e: DragEvent) {
@@ -179,23 +189,25 @@ class MouseListener {
         this.sticker.move(e.clientX - this.x, e.clientY - this.y);
     }
 
-    dragLeave(e: DragEvent) {
-        console.log(`test`);
-        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+    static mouseup(e: PointerEvent) {
+        if (e.button === 2) {
+            e.preventDefault();
+            const target: HTMLElement = <HTMLElement> e.target;
+            if (target.className === `board`) {
+                Stickers.create(e.clientX - 100, e.clientY - 100);
+            }
+            else {
+                Stickers.remove(parseInt(target.dataset.id));
+            }
+        }
     }
 
     static context(e: PointerEvent) {
         e.preventDefault();
-        const target: HTMLElement = <HTMLElement> e.target;
-        if (target.className === `board`) {
-            Stickers.create(e.clientX - 100, e.clientY - 100);
-        }
-        else if (target.className === `sticker-head`) {
-            Stickers.remove(parseInt(target.dataset.id));
-        }
     }
 }
 
 board.addEventListener(`contextmenu`, MouseListener.context, false);
+board.addEventListener(`mouseup`, MouseListener.mouseup, false);
 
 Stickers.load();

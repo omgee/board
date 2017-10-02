@@ -54,15 +54,24 @@ textarea {
   width: 200px;
   height: 200px;
   background: $sticker-color;
-  border: thin solid $border-color;
   border-radius: 2px;
   position: absolute;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12),
+              0 1px 2px rgba(0, 0, 0, .24);
+  transition: box-shadow 0.3s cubic-bezier(.25, .8, .25, 1),
+              transform 0.3s cubic-bezier(.25, .8, .25, 1);
+}
+
+.sticker:active {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .25),
+              0 10px 10px rgba(0, 0, 0, .22);
+  z-index: 99;
+  transform: scale(1.1) !important;
 }
 
 .sticker-head {
   padding: 1em;
   background: $shadow-color;
-  cursor: pointer;
 }
 
 .sticker-body {
@@ -70,11 +79,14 @@ textarea {
   padding: .5em;
 }
 
-@keyframes sticker-show {
-  from {
+@keyframes show {
+  0% {
     transform: scale(0);
   }
-  to {
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
     transform: scale(1);
   }
 }
