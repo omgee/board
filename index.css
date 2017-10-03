@@ -25,7 +25,8 @@ textarea {
   max-width: 100%;
   min-width: 100%;
   background: transparent;
-  border: 0; }
+  border: 0;
+  resize: none; }
 
 .section {
   flex: 1;
@@ -68,5 +69,38 @@ textarea {
     transform: scale(1.1); }
   100% {
     transform: scale(1); } }
+.sticker-colors {
+  position: absolute;
+  flex-direction: row;
+  overflow: auto;
+  padding: 32px;
+  display: none; }
+  .sticker-colors .sticker-yellow {
+    background: #FFEB3B; }
+  .sticker-colors .sticker-green {
+    background: #8BC34A; }
+  .sticker-colors .sticker-red {
+    background: #F44336; }
+  .sticker-colors .sticker-blue {
+    background: #03A9F4; }
+
+.sticker-colors > div {
+  width: 50px;
+  height: 50px;
+  border-radius: 2px;
+  transform: scale(0.8);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); }
+
+.sticker-colors > div:hover {
+  transform: scale(1);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22); }
+
+@keyframes showColorPicker {
+  from {
+    opacity: 0; }
+  to {
+    opacity: 1; } }
 
 /*# sourceMappingURL=index.css.map */
