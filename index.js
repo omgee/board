@@ -114,7 +114,6 @@ var KeyboardListener = (function () {
         }, false);
     }
     KeyboardListener.prototype.keyUp = function () {
-        console.log(this.sticker);
         this.sticker.text = this.textarea.value;
         Stickers.save();
     };

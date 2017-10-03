@@ -144,7 +144,6 @@ class KeyboardListener {
     }
 
     keyUp(): void {
-        console.log(this.sticker);
         this.sticker.text = this.textarea.value;
 
         Stickers.save();
