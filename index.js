@@ -48,7 +48,21 @@ var Stickers = (function () {
             Stickers.create(sticker.x, sticker.y, sticker.color, sticker.id, sticker.text);
         }
     };
+    Stickers.removeAll = function () {
+        for (var _i = 0, _a = Stickers.array; _i < _a.length; _i++) {
+            var sticker = _a[_i];
+            sticker.remove();
+        }
+        Stickers.array = [];
+        Stickers.save();
+    };
+    Stickers.stickerToTop = function (sticker) {
+        sticker.element.style.zIndex = "" + Stickers.currentLayout++;
+        Stickers.array.push(Stickers.array.splice(Stickers.array.indexOf(sticker), 1)[0]);
+        Stickers.save();
+    };
     Stickers.array = [];
+    Stickers.currentLayout = 2;
     return Stickers;
 }());
 var Sticker = (function () {
@@ -97,6 +111,7 @@ var Sticker = (function () {
     Sticker.prototype.move = function (x, y) {
         this.x = x;
         this.y = y;
+        Stickers.stickerToTop(this);
         this.element.style.left = x + "px";
         this.element.style.top = y + "px";
         Stickers.save();
@@ -135,6 +150,7 @@ var MouseListener = (function () {
             _this.dragEnd(e);
         }, false);
         this.textarea.addEventListener("mousedown", function () {
+            Stickers.stickerToTop(_this.sticker);
             _this.textarea.readOnly = true;
         }, false);
         this.textarea.addEventListener("mouseup", function () {
@@ -231,4 +247,8 @@ Color.init();
 board.addEventListener("contextmenu", MouseListener.context, false);
 board.addEventListener("mouseup", MouseListener.mouseup, false);
 Color.element.addEventListener("mouseup", MouseListener.mouseup, false);
+document.addEventListener("keydown", function (e) {
+    if (e.shiftKey && e.keyCode === 82)
+        Stickers.removeAll();
+}, false);
 Stickers.load();

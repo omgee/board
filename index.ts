@@ -3,6 +3,8 @@ const board = document.querySelector(`.board`);
 class Stickers {
     static array: Array<Sticker> = [];
 
+    static currentLayout: number = 2;
+
     static create(x: number, y: number, color?: string, id?: number, text?: string): void {
         Stickers.array.push(new Sticker(x, y, color, id, text));
 
@@ -49,6 +51,20 @@ class Stickers {
         for (let sticker of tmpArray) {
             Stickers.create(sticker.x, sticker.y, sticker.color, sticker.id, sticker.text);
         }
+    }
+
+    static removeAll(): void {
+        for (let sticker of Stickers.array) {
+            sticker.remove();
+        }
+        Stickers.array = [];
+        Stickers.save();
+    }
+
+    static stickerToTop(sticker: Sticker): void {
+        sticker.element.style.zIndex = `${Stickers.currentLayout++}`;
+        Stickers.array.push(Stickers.array.splice(Stickers.array.indexOf(sticker), 1)[0]);
+        Stickers.save();
     }
 }
 
@@ -121,6 +137,8 @@ class Sticker {
         this.x = x;
         this.y = y;
 
+        Stickers.stickerToTop(this);
+
         this.element.style.left = `${x}px`;
         this.element.style.top = `${y}px`;
 
@@ -154,10 +172,6 @@ class MouseListener {
     x: number;
     y: number;
 
-    previousX: number;
-    previousY: number;
-    outOfBoard
-
     sticker: Sticker;
     element: HTMLElement;
     textarea: HTMLTextAreaElement;
@@ -186,13 +200,19 @@ class MouseListener {
         }, false);
 
         this.textarea.addEventListener(`mousedown`, () => {
+
+            Stickers.stickerToTop(this.sticker);
+
             this.textarea.readOnly = true;
+
         }, false);
 
         this.textarea.addEventListener(`mouseup`, () => {
+
             this.textarea.readOnly = false;
             this.textarea.blur();
             this.textarea.focus();
+
         }, false);
     }
 
@@ -295,5 +315,11 @@ Color.init();
 board.addEventListener(`contextmenu`, MouseListener.context, false);
 board.addEventListener(`mouseup`, MouseListener.mouseup, false);
 Color.element.addEventListener(`mouseup`, MouseListener.mouseup, false);
+
+document.addEventListener(`keydown`, (e: KeyboardEvent) => {
+
+    if (e.shiftKey && e.keyCode === 82) Stickers.removeAll();
+
+}, false);
 
 Stickers.load();
