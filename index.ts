@@ -153,6 +153,11 @@ class KeyboardListener {
 class MouseListener {
     x: number;
     y: number;
+
+    previousX: number;
+    previousY: number;
+    outOfBoard
+
     sticker: Sticker;
     element: HTMLElement;
     textarea: HTMLTextAreaElement;
@@ -199,11 +204,22 @@ class MouseListener {
     }
 
     drag(e: DragEvent) {
+
+        if (e.clientX == 0 && e.clientY == 0) return;
+
         this.sticker.move(e.clientX - this.x, e.clientY - this.y);
     }
 
     dragEnd(e: DragEvent) {
-        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+
+        let [x, y] = [e.clientX - this.x, e.clientY - this.y];
+        if (x < 0) x = 5;
+        if (y < 0) y = 5;
+        if (x + 200 > board.clientWidth) x = board.clientWidth - 205;
+        if (y + 200 > board.clientHeight) y = board.clientHeight - 205;
+
+        this.sticker.move(x, y);
+
     }
 
     static mouseup(e: PointerEvent) {

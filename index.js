@@ -150,10 +150,21 @@ var MouseListener = (function () {
         e.dataTransfer.setDragImage(crt, 0, 0);
     };
     MouseListener.prototype.drag = function (e) {
+        if (e.clientX == 0 && e.clientY == 0)
+            return;
         this.sticker.move(e.clientX - this.x, e.clientY - this.y);
     };
     MouseListener.prototype.dragEnd = function (e) {
-        this.sticker.move(e.clientX - this.x, e.clientY - this.y);
+        var _a = [e.clientX - this.x, e.clientY - this.y], x = _a[0], y = _a[1];
+        if (x < 0)
+            x = 5;
+        if (y < 0)
+            y = 5;
+        if (x + 200 > board.clientWidth)
+            x = board.clientWidth - 205;
+        if (y + 200 > board.clientHeight)
+            y = board.clientHeight - 205;
+        this.sticker.move(x, y);
     };
     MouseListener.mouseup = function (e) {
         if (e.button === 2) {
