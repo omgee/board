@@ -1,5 +1,25 @@
 const board = document.querySelector(`.board`);
 
+class Tooltip {
+    static wrapTooltip: HTMLElement = <HTMLElement> document.querySelector(`.wrap-tooltip`);
+    static tooltip: HTMLElement = <HTMLElement> document.querySelector(`.tooltip`);
+    static tooltipClose: HTMLElement = <HTMLElement> document.querySelector(`.tooltip-close`);
+
+    static init(): void {
+        Tooltip.tooltipClose.addEventListener(`click`, Tooltip.hide, false);
+    }
+
+    static show(): void {
+        Tooltip.wrapTooltip.style.animation = `showTooltipBackground 1s cubic-bezier(.25, .8, .25, 1) 1s forwards`;
+        Tooltip.tooltip.style.animation = `showTooltip 1s cubic-bezier(.25, .8, .25, 1) 1s forwards`;
+    }
+
+    static hide(): void {
+        Tooltip.wrapTooltip.style.animation = `hideTooltipBackground 1s cubic-bezier(.25, .8, .25, 1)`;
+        Tooltip.tooltip.style.animation = `hideTooltip 1s cubic-bezier(.25, .8, .25, 1)`;
+    }
+}
+
 class Stickers {
     static array: Array<Sticker> = [];
 
@@ -47,7 +67,11 @@ class Stickers {
     }
 
     static load() {
-        let tmpArray = JSON.parse(localStorage.getItem(`stickers`));
+
+        // TODO Beautify
+        if (localStorage.getItem(`stickers`) === null) Tooltip.show();
+
+        let tmpArray = JSON.parse(localStorage.getItem(`stickers`)) || [];
         for (let sticker of tmpArray) {
             Stickers.create(sticker.x, sticker.y, sticker.color, sticker.id, sticker.text);
         }
@@ -327,3 +351,5 @@ document.addEventListener(`keydown`, (e: KeyboardEvent) => {
 }, false);
 
 Stickers.load();
+
+Tooltip.init();

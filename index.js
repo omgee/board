@@ -1,4 +1,23 @@
 var board = document.querySelector(".board");
+var Tooltip = (function () {
+    function Tooltip() {
+    }
+    Tooltip.init = function () {
+        Tooltip.tooltipClose.addEventListener("click", Tooltip.hide, false);
+    };
+    Tooltip.show = function () {
+        Tooltip.wrapTooltip.style.animation = "showTooltipBackground 1s cubic-bezier(.25, .8, .25, 1) 1s forwards";
+        Tooltip.tooltip.style.animation = "showTooltip 1s cubic-bezier(.25, .8, .25, 1) 1s forwards";
+    };
+    Tooltip.hide = function () {
+        Tooltip.wrapTooltip.style.animation = "hideTooltipBackground 1s cubic-bezier(.25, .8, .25, 1)";
+        Tooltip.tooltip.style.animation = "hideTooltip 1s cubic-bezier(.25, .8, .25, 1)";
+    };
+    Tooltip.wrapTooltip = document.querySelector(".wrap-tooltip");
+    Tooltip.tooltip = document.querySelector(".tooltip");
+    Tooltip.tooltipClose = document.querySelector(".tooltip-close");
+    return Tooltip;
+}());
 var Stickers = (function () {
     function Stickers() {
     }
@@ -42,7 +61,10 @@ var Stickers = (function () {
         localStorage.setItem("stickers", JSON.stringify(tmpArray));
     };
     Stickers.load = function () {
-        var tmpArray = JSON.parse(localStorage.getItem("stickers"));
+        // TODO Beautify
+        if (localStorage.getItem("stickers") === null)
+            Tooltip.show();
+        var tmpArray = JSON.parse(localStorage.getItem("stickers")) || [];
         for (var _i = 0, tmpArray_1 = tmpArray; _i < tmpArray_1.length; _i++) {
             var sticker = tmpArray_1[_i];
             Stickers.create(sticker.x, sticker.y, sticker.color, sticker.id, sticker.text);
@@ -254,3 +276,4 @@ document.addEventListener("keydown", function (e) {
         Stickers.removeAll();
 }, false);
 Stickers.load();
+Tooltip.init();
