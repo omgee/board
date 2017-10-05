@@ -67,8 +67,10 @@ var Stickers = (function () {
 }());
 var Sticker = (function () {
     function Sticker(x, y, color, id, text) {
-        this.x = x > 0 ? x : 0;
-        this.y = y > 0 ? y : 0;
+        this.x = x > 0 ? x : 5;
+        this.y = y > 0 ? y : 5;
+        this.x = x + 200 < board.clientWidth ? x : board.clientWidth - 205;
+        this.y = y + 200 < board.clientHeight ? y : board.clientHeight - 205;
         this.id = id ? id : Stickers.last() + 1;
         this.text = text ? text : "";
         this.color = color ? color : "#FFEB3B";
@@ -208,7 +210,7 @@ var MouseListener = (function () {
         e.preventDefault();
         var target = e.target;
         if (target.className === "board")
-            Color.show(e.clientX - 57, e.clientY - 57);
+            Color.show(e.clientX - 82, e.clientY - 82);
     };
     return MouseListener;
 }());
@@ -248,7 +250,7 @@ board.addEventListener("contextmenu", MouseListener.context, false);
 board.addEventListener("mouseup", MouseListener.mouseup, false);
 Color.element.addEventListener("mouseup", MouseListener.mouseup, false);
 document.addEventListener("keydown", function (e) {
-    if (e.shiftKey && e.keyCode === 82)
+    if (e.shiftKey && e.keyCode === 46)
         Stickers.removeAll();
 }, false);
 Stickers.load();

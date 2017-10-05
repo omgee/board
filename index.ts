@@ -77,8 +77,12 @@ class Sticker {
     element: HTMLElement;
 
     constructor(x: number, y: number, color?: string, id?:number, text?: string) {
-        this.x = x > 0 ? x : 0;
-        this.y = y > 0 ? y : 0;
+        this.x = x > 0 ? x : 5;
+        this.y = y > 0 ? y : 5;
+
+        this.x = x + 200 < board.clientWidth ? x : board.clientWidth - 205;
+        this.y = y + 200 < board.clientHeight ? y : board.clientHeight - 205;
+
         this.id = id ? id : Stickers.last() + 1;
         this.text = text ? text : ``;
         this.color = color ? color : `#FFEB3B`;
@@ -269,7 +273,7 @@ class MouseListener {
     static context(e: PointerEvent) {
         e.preventDefault();
         const target: HTMLElement = <HTMLElement> e.target;
-        if (target.className === `board`) Color.show(e.clientX - 57, e.clientY - 57);
+        if (target.className === `board`) Color.show(e.clientX - 82, e.clientY - 82);
     }
 }
 
@@ -318,7 +322,7 @@ Color.element.addEventListener(`mouseup`, MouseListener.mouseup, false);
 
 document.addEventListener(`keydown`, (e: KeyboardEvent) => {
 
-    if (e.shiftKey && e.keyCode === 82) Stickers.removeAll();
+    if (e.shiftKey && e.keyCode === 46) Stickers.removeAll();
 
 }, false);
 

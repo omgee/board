@@ -43,6 +43,11 @@ textarea {
   background: transparent;
   border: 0;
   resize: none;
+  overflow-y: scroll;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
 
 .section {
@@ -106,6 +111,8 @@ textarea {
   overflow: auto;
   padding: 32px;
   display: none;
+  flex-wrap: wrap;
+  width: 132px;
 
   .sticker-yellow {
     background: $sticker-yellow;

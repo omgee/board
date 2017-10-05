@@ -26,7 +26,11 @@ textarea {
   min-width: 100%;
   background: transparent;
   border: 0;
-  resize: none; }
+  resize: none;
+  overflow-y: scroll; }
+
+::-webkit-scrollbar {
+  display: none; }
 
 .section {
   flex: 1;
@@ -74,7 +78,9 @@ textarea {
   flex-direction: row;
   overflow: auto;
   padding: 32px;
-  display: none; }
+  display: none;
+  flex-wrap: wrap;
+  width: 132px; }
   .sticker-colors .sticker-yellow {
     background: #FFEB3B; }
   .sticker-colors .sticker-green {
