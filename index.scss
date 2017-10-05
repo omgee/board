@@ -123,6 +123,7 @@ span {
   display: none;
   flex-wrap: wrap;
   width: 132px;
+  box-sizing: content-box;
 
   .sticker-yellow {
     background: $sticker-yellow;

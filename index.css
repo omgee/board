@@ -89,7 +89,8 @@ span {
   padding: 32px;
   display: none;
   flex-wrap: wrap;
-  width: 132px; }
+  width: 132px;
+  box-sizing: content-box; }
   .sticker-colors .sticker-yellow {
     background: #FFEB3B; }
   .sticker-colors .sticker-green {
